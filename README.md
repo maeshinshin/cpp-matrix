@@ -11,4 +11,4 @@ Matrix A(3,4)
 ```
 
 ## method
-* `matrix*.set*` 
+### `.set` 
