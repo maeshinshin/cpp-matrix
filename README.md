@@ -1,5 +1,5 @@
 # cpp-matrix
-**about this class
+## about this class
 this class is enable you to calculate matrix
 
 # constructor
