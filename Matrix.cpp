@@ -1,8 +1,17 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <iomanip>
 
 using namespace std;
+
+int sign(int a,int b){
+    if((a+b)%2==0){
+        return 1;
+    }else{
+        return -1;
+    }
+}
 
 class Matrix {
 public:
@@ -18,20 +27,19 @@ public:
 
     int getRows() const { return rows_num; }
     int getCols() const { return cols_num; }
-
     
     double &operator()(int i, int j) { 
         if (i<=0 ||i>rows_num ||j<=0 ||j>cols_num){
             throw out_of_range("Index out of range.");
         }
-        return data_[i-1][j-1]; }
+        return data_[i-1][j-1];
+    }
+
     const double &operator()(int i, int j) const {
         if (i<=0 ||i>rows_num ||j<=0 ||j>cols_num){
             throw out_of_range("Index out of range.");
         }
         return data_[i-1][j-1]; }
-
-    
 
     Matrix operator+(const Matrix &other) const {
         if (!((*this).getCols()==other.getCols()&&(*this).getRows()==other.getRows())){
@@ -87,7 +95,6 @@ public:
         }
     }
 
-
     Matrix getRow(int i) const {
         if (!(0<=i && i<=rows_num)){
             throw out_of_range("Index out of range.(getRow)");
@@ -133,12 +140,91 @@ public:
     void show() const {
         for (int i = 1; i < rows_num+1; i++) {
             for (int j = 1; j < cols_num+1; j++) {
-                cout << (*this)(i, j) << " ";
+                cout <<setw(3)<<(*this)(i, j) << " ";
             }
             cout << endl;
         }
         cout << endl;
     }
+
+    Matrix change_rows(int i,int j) const{//行を入れ替える
+        Matrix result(rows_num,cols_num);
+        if (j<i){
+            int a=i;
+            i=j;
+            j=a;
+        }
+        for (int ii =1;ii<rows_num+1;ii++){
+            for (int j2=1;j2<cols_num+1;j2++){
+                if(ii==i){
+                    result(ii, j2)=(*this)(j,j2);
+                }else if(ii==j){
+                    result(ii, j2)=(*this)(i,j2);
+                }else{
+                    result(ii,j2)=(*this)(ii,j2);
+                }
+            }
+        }
+        return result;
+    }
+
+    Matrix preProcessing()const{
+        Matrix result(*this);
+        for(int k=1;k<result.rows_num+1;k++){
+            if(result(k,k)==0){
+                for(int i=k+1;i<rows_num+1;i++){
+                    if(result(k,i)!=0){
+                        if(result(i,k)!=0){
+                            result.change_rows(k,i);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    Matrix cut(int i,int j) const{
+        if (!(cols_num==rows_num&&1<=i&&i<=cols_num)&&1<=j&&j<=cols_num){
+            throw out_of_range("Index out of range.(cut)");
+        }
+        Matrix result(rows_num-1,cols_num-1);
+        for (int ii =1;ii<i;ii++){
+            for(int j2=1;j2<j;j2++){
+                result(ii,j2)=(*this)(ii,j2); 
+            }
+            for(int j2=j;j2<cols_num;j2++){
+                result(ii,j2)=(*this)(ii,j2+1); 
+            }
+        }
+        for (int ii =i;ii<rows_num;ii++){
+            for(int j2=1;j2<j;j2++){
+                result(ii,j2)=(*this)(ii+1,j2); 
+            }
+            for(int j2=j;j2<cols_num;j2++){
+                result(ii,j2)=(*this)(ii+1,j2+1); 
+            }
+        }
+        return result;
+    }
+
+    double minideterminant(int i) const{
+        if (!(cols_num==rows_num&&1<=i&&i<=cols_num)){
+            throw out_of_range("Index out of range.(minideterminant)");
+        }
+        if(i==1){
+            return (*this)(1,1);
+        }
+        double result =0;
+        for (int k =1;k<i+1;k++){
+            if ((1+k)%2==0){
+                result+=(*this)(k,1)*(*this).cut(k,1).minideterminant(i-1);
+            }else{
+                result-=(*this)(k,1)*(*this).cut(k,1).minideterminant(i-1);
+            }
+        }
+        return result;
+    }
+
 
     vector<Matrix> lU1() const{ //square matrix uij=1
         Matrix l(rows_num,cols_num);  
@@ -164,10 +250,16 @@ public:
     }
 
     Matrix lU2() const{ //square matrix uij=1
-        bool flag=true;
-            if (!((flag)&&(rows_num==cols_num))){
-                throw out_of_range("Index out of range.(soloveSLE)");
+        if (!(rows_num==cols_num)){
+            throw out_of_range("Index out of range.(lU2,num)");
+        }
+        /* TODO
+        for (int i =1;i<rows_num+1;i++){
+            if((*this).minideterminant(i)==0){
+                throw out_of_range("Index out of range.(lU2,minideterminant)");
             }
+        }
+        */
         Matrix lu(rows_num,cols_num);  
         for (int k=1;k<rows_num+1;k++){
             for (int i=1;i<k+1;i++){
@@ -194,7 +286,6 @@ public:
         Matrix y(cols_num,1);
         Matrix x(cols_num,1);
         Matrix lu=(*this).lU2();
-        lu.show();
         for (int i=1;i<cols_num+1;i++){
             y(i,1)=b(i,1);
             for(int j =1 ;j<i;j++){
@@ -209,7 +300,6 @@ public:
             }
         }
         return x;
-        
     }
 
     Matrix transpose() const {
@@ -222,14 +312,23 @@ public:
         return result;
     }
 
-/*
-    Matrix inverse1(){
-        Matrix A(rows_num,cols_num);
-        Matrix[] B=(*this).LU1();
-        A=
-        return A;
+    double trace() const{
+        if (!(cols_num==rows_num)){
+            throw out_of_range("Index out of range.(trace)");
+        }
+        double result=(*this)(1,1);
+        for (int i = 2;i<rows_num+1;i++){
+            result+=(*this)(i,i);
+        }
+        return result;
     }
-*/
+
+    double ludeterminant() const{
+        if (!(cols_num==rows_num)){
+            throw out_of_range("Index out of range.(ludeterminant)");
+        }
+        return (*this).lU2().trace();
+    }
 
 private:
     int rows_num;
@@ -238,62 +337,53 @@ private:
 };
 
 int main() {
-    Matrix A(4, 4);
-    A(1, 1) = 8.0;
-    A(1, 2) = 16.0;
-    A(1, 3) = 24.0;
-    A(1, 4) = 32.0;
-    A(2, 1) = 2.0;
-    A(2, 2) = 7.0;
-    A(2, 3) = 12.0;
-    A(2, 4) = 17.0;
-    A(3, 1) = 6.0;
-    A(3, 2) = 17.0;
-    A(3, 3) = 32.0;
-    A(3, 4) = 59.0;
-    A(4, 1) = 7.0;
-    A(4, 2) = 22.0;
-    A(4, 3) = 46.0;
-    A(4, 4) = 105.0;
+    Matrix A(16, 16);
+    vector<vector<double>> a={
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    { 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1},
+    { 1, 1,-1,-1, 1, 1,-1,-1, 1, 1,-1,-1, 1, 1,-1,-1},
+    { 1,-1,-1, 1, 1,-1,-1, 1, 1,-1,-1, 1, 1,-1,-1, 1},
+    { 1, 1, 1, 1,-1,-1,-1,-1, 1, 1, 1, 1,-1,-1,-1,-1},
+    { 1,-1, 1,-1,-1, 1,-1, 1, 1,-1, 1,-1,-1, 1,-1, 1},
+    { 1, 1,-1,-1,-1,-1, 1, 1, 1, 1,-1,-1,-1,-1, 1, 1},
+    { 1,-1,-1, 1,-1, 1, 1,-1, 1,-1,-1, 1,-1, 1, 1,-1},
+    { 1, 1, 1, 1, 1, 1, 1, 1,-1,-1,-1,-1,-1,-1,-1,-1},
+    { 1,-1, 1,-1, 1,-1, 1,-1,-1, 1,-1, 1,-1, 1,-1, 1},
+    { 1, 1,-1,-1, 1, 1,-1,-1,-1,-1, 1, 1,-1,-1, 1, 1},
+    { 1,-1,-1, 1, 1,-1,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1},
+    { 1, 1, 1, 1,-1,-1,-1,-1,-1,-1,-1,-1, 1, 1, 1, 1},
+    { 1,-1, 1,-1,-1, 1,-1, 1,-1, 1,-1, 1, 1,-1, 1,-1},
+    { 1, 1,-1,-1,-1,-1, 1, 1,-1,-1, 1, 1, 1, 1,-1,-1},
+    { 1,-1,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1,-1, 1}
+    };
+    A.set(a);
 
-    Matrix C = A +A;
-    Matrix D = A -A;
-    Matrix E = A * A;
-    vector<Matrix> F=A.lU1();
-    Matrix G = A.lU2();
+    Matrix B(16,1);
+    vector<vector<double>>b={
+    { 1},
+    {-3},
+    {-3},
+    { 9},
+    {-3},
+    { 9},
+    { 9},
+    {-27},
+    {-3},
+    { 9},
+    { 9},
+    {-27},
+    { 9},
+    {-27},
+    {-27},
+    {81},
+    };
+    B.set(b);
 
     cout<<"A"<<endl;
     A.show();
-    cout<<"C = A +A"<<endl;
-    C.show();
-    cout<<"D = A -A"<<endl;
-    D.show();
-    cout<<"E = A * A"<<endl;
-    E.show();
-    cout <<endl<<endl;
-
-    cout<<"A=LU"<<endl;
-    cout<<"L"<<endl;
-    F[0].show();
-    cout <<"U"<<endl;
-    F[1].show();
-
-    cout<<"LU"<<endl;
-    G.show();
-    Matrix H=F[0]*F[1];
-    cout<<"L*U"<<endl;
-    H.show();
-
-
-
-    Matrix b(4,1);
-    b.set({{160},{70},{198},{201}});
-    cout<<"b"<<endl;
-    b.show();
-    Matrix I =A.solveSLE(b);
-    cout<<"I"<<endl;
-    I.show();
-
-    
+    cout<<"B"<<endl;
+    B.show();
+    cout<<"x (Ax=B)"<<endl;
+    A.solveSLE(B).show();
     return 0;
 }
