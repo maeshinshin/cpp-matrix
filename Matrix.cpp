@@ -319,7 +319,6 @@ public:
             }
         }
 
-        sub.show();
         Matrix lu=sub.lU2();
         return {lu,p} ;
     }
@@ -400,6 +399,10 @@ public:
             throw out_of_range("Index out of range.(ludeterminant)");
         }
         return (*this).lU2().trace();
+    }
+
+    vector<vector<double>> to_vector(){
+        return (*this).data_;
     }
 
 private:
