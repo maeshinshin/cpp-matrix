@@ -19,13 +19,7 @@ class Matrix {
 public:
     Matrix(int rows, int cols) : rows_num(rows), cols_num(cols), data_(rows,vector<double>(cols,0.0)) {}
 
-    Matrix(const Matrix &other) : rows_num(other.rows_num), cols_num(other.cols_num), data_(other.rows_num,vector<double>(other.cols_num,0.0)) {
-        for (int i = 0; i < rows_num; ++i) {
-            for (int j = 0; j < cols_num; ++j) {
-                (*this).data_[i][j] = other.data_[i][j];
-            }
-        }
-    }
+    Matrix(const Matrix &other) : rows_num(other.rows_num), cols_num(other.cols_num), data_(other.rows_num,vector<double>(other.cols_num,0.0)) {}
 
     int getRows() const { return rows_num; }
     int getCols() const { return cols_num; }

@@ -429,6 +429,7 @@ int main() {
     { 1,-1,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1,-1, 1}
     };
     A.set(a);
+    Matrix AA(A);
 
     Matrix B(16,1);
     vector<vector<double>>b={
@@ -461,6 +462,8 @@ int main() {
 
     cout<<"A"<<endl;
     A.show();
+    cout<<"AA"<<endl;
+    AA.show();
     cout<<"B"<<endl;
     B.show();
     cout<<"C"<<endl;
