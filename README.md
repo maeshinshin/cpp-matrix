@@ -13,7 +13,7 @@ Private variables is below,
 - data_
   This is std::vector<std::vector<double>. as the elements of the matrix. 
   
-## to use 
+## How to use 
 
 Please put files `Matrix.cpp` in the same directory,
 and write the following at the top of the code.
@@ -38,17 +38,4 @@ The sample is,
 Matrix M1(3,4);
 Matrix M2(M1); // copy
 ```
-
-## method
-### `.set` 
-To transform the `std::vector<std::vector<double>` object into a matrix object.
-The sample is,
-
-```
-Matrix M;
-vector<vector<int>> vec = {{1,2,3},{4,5,6},{7,8,9}};
-M.set(vec); // set
-```
-
-
 
